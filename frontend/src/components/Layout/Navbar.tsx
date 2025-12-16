@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../../services/auth.service';
 import type { User } from '../../types/auth.types';
+import logo from '../../assets/logo.png';
+
 
 interface NavbarProps {
   user: User | null;
@@ -23,19 +25,22 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
   };
 
   return (
-    <nav className="bg-white shadow-lg">
+    <nav className="bg-gray-200 drop-shadow-green-800 fixed top-0 w-full ">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="text-xl font-bold text-gray-800">
-              Todo App
-            </Link>
-          </div>
-
+  <Link to="/" className="text-xl font-bold text-gray-800 flex items-center">
+    <img src={logo} alt="logo" className="w-12 mr-2" /> 
+    <span className="text-xl font-bold text-gray-800">
+      Task<span className="text-2xl text-red-400 italic">Pro</span>
+    </span>
+  </Link>
+</div>  
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
               <>
-                <span className="text-gray-700">Hello, {user.name}</span>
+                <span className="text-gray-700 w-10 bg-amber-200 h-10 rounded-full border-1 text-center text-3xl "> {user.email.slice(0,1)}</span>
+              
                 <Link
                   to="/profile"
                   className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
@@ -93,7 +98,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
       </div>
 
       {isMenuOpen && (
-        <div className="md:hidden">
+        <div className="md:hidden z-1000">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {user ? (
               <>

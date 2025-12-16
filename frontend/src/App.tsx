@@ -8,6 +8,7 @@ import ProfilePage from './pages/ProfilePage';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import type { User } from './types/auth.types';
 import { authService } from './services/auth.service';
+import Slider from './components/Layout/Slider';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -44,6 +45,7 @@ const App: React.FC = () => {
     <Router>
       <div className="min-h-screen bg-gray-50">
         <Navbar user={user} onLogout={handleLogout} />
+        
         <Routes>
           <Route path="/" element={<Home user={user} />} />
           <Route 
