@@ -1,144 +1,248 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { authService } from '../../services/auth.service';
-import type { User } from '../../types/auth.types';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import logo from '../../assets/logo.png';
+import Box from '../Auth/Box';
+import { MdHome, MdDashboard, MdDateRange } from "react-icons/md";
+import { LuMessageCircleMore } from "react-icons/lu";
 
+const Navbar: React.FC = () => {
+  const [showBox, setShowBox] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const { user, logout } = useAuth();
+  const location = useLocation();
 
-interface NavbarProps {
-  user: User | null;
-  onLogout: () => void;
-}
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) {
+        setShowBox(false);
+      }
+    };
 
-const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navigate = useNavigate();
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
     try {
-      await authService.logout();
-      onLogout();
-      navigate('/login');
+      await logout();
+      setShowBox(false);
     } catch (error) {
       console.error('Logout failed:', error);
     }
   };
 
+  const navItems = [
+    { 
+      icon: <MdHome className="text-2xl" />, 
+      label: "Home", 
+      path: "/" 
+    },
+    { 
+      icon: <MdDashboard className="text-2xl" />, 
+      label: "Dashboard", 
+      path: "/dashboard" 
+    },
+    { 
+      icon: <MdDateRange className="text-2xl" />, 
+      label: "Calendar", 
+      path: "/calendar" 
+    },
+    { 
+      icon: <LuMessageCircleMore className="text-2xl" />, 
+      label: "Messages", 
+      path: "/messages" 
+    },
+  ];
+
+  const isActive = (path: string) => location.pathname === path;
+
   return (
-    <nav className="bg-gray-200 drop-shadow-green-800 fixed top-0 w-full ">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-  <Link to="/" className="text-xl font-bold text-gray-800 flex items-center">
-    <img src={logo} alt="logo" className="w-12 mr-2" /> 
-    <span className="text-xl font-bold text-gray-800">
-      Task<span className="text-2xl text-red-400 italic">Pro</span>
-    </span>
-  </Link>
-</div>  
-          <div className="hidden md:flex items-center space-x-4">
-            {user ? (
-              <>
-                <span className="text-gray-700 w-10 bg-amber-200 h-10 rounded-full border-1 text-center text-3xl "> {user.email.slice(0,1)}</span>
-              
+    <>
+      {/* Desktop Navbar */}
+      <nav className="bg-white shadow-md fixed top-0 w-full z-50 hidden md:block">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex justify-between h-16 items-center">
+            {/* Logo */}
+            <Link to="/" className="flex items-center">
+              <img src={logo} alt="logo" className="w-10 h-10 mr-3" />
+              <span className="text-xl font-bold text-gray-800">
+                Task<span className="text-blue-600 italic">Pro</span>
+              </span>
+            </Link>
+
+            {/* Navigation Icons - Desktop */}
+            <div className="flex items-center space-x-8">
+              {navItems.map((item) => (
                 <Link
-                  to="/profile"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+                  key={item.path}
+                  to={item.path}
+                  className={`flex flex-col items-center justify-center ${
+                    isActive(item.path) 
+                      ? 'text-blue-600' 
+                      : 'text-gray-600 hover:text-blue-500'
+                  }`}
                 >
-                  Profile
+                  <div className={`p-2 rounded-lg ${
+                    isActive(item.path) ? 'bg-blue-50' : ''
+                  }`}>
+                    {item.icon}
+                  </div>
+                  {/* <span className="text-xs mt-1 font-medium">{item.label}</span> */}
                 </Link>
+              ))}
+            </div>
+
+            {/* Auth Section - Profile in navbar */}
+            {user ? (
+              <div className="relative" ref={boxRef}>
                 <button
-                  onClick={handleLogout}
-                  className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 text-sm font-medium"
+                  onClick={() => setShowBox(!showBox)}
+                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition"
                 >
-                  Logout
+                  <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center font-semibold text-blue-600">
+                    {user.email[0].toUpperCase()}
+                  </div>
+                  <div className="text-left hidden lg:block">
+                    <p className="text-sm font-medium text-gray-700">{user.name}</p>
+                    <p className="text-xs text-gray-500 truncate max-w-[150px]">{user.email}</p>
+                  </div>
                 </button>
-              </>
+
+                {showBox && <Box onLogout={handleLogout} />}
+              </div>
             ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+              <div className="flex items-center space-x-4">
+                <Link 
+                  to="/login" 
+                  className="text-gray-600 hover:text-blue-600 font-medium"
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
-                  className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 text-sm font-medium"
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 font-medium"
                 >
                   Register
                 </Link>
-              </>
+              </div>
             )}
           </div>
+        </div>
+      </nav>
 
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
-            >
-              <span className="sr-only">Open main menu</span>
-              <svg
-                className="h-6 w-6"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </button>
+      {/* Mobile Navbar */}
+      <nav className="bg-white shadow-md fixed top-0 w-full z-50 md:hidden">
+        <div className="px-4">
+          <div className="flex justify-between h-14 items-center">
+            {/* Logo */}
+            <Link to="/" className="flex items-center">
+              <img src={logo} alt="logo" className="w-8 h-8 mr-2" />
+              <span className="text-lg font-bold text-gray-800">
+                Task<span className="text-blue-600 italic">Pro</span>
+              </span>
+            </Link>
+
+            {/* Mobile Auth Section - Profile in navbar */}
+            {user ? (
+              <div className="relative" ref={boxRef}>
+                <button
+                  onClick={() => setShowBox(!showBox)}
+                  className="flex items-center space-x-2"
+                >
+                  <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center font-semibold text-blue-600">
+                    {user.email[0].toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 hidden sm:block">
+                    {user.name}
+                  </span>
+                </button>
+
+                {showBox && (
+                  <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                    <div className="p-4 border-b border-gray-100">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center font-semibold text-blue-600">
+                          {user.email[0].toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-700">{user.name}</p>
+                          <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="py-2">
+                      <Link
+                        to="/profile"
+                        className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setShowBox(false)}
+                      >
+                        <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
+                          <span className="text-xs">👤</span>
+                        </div>
+                        Profile
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
+                          <span className="text-xs">🚪</span>
+                        </div>
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center space-x-3">
+                <Link 
+                  to="/login" 
+                  className="text-gray-600 hover:text-blue-600 font-medium text-sm"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600 font-medium text-sm"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
           </div>
+        </div>
+      </nav>
+
+      {/* Mobile Bottom Navigation (Only Icons) */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 md:hidden">
+        <div className="flex justify-around items-center h-16">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex flex-col items-center justify-center flex-1 ${
+                isActive(item.path) 
+                  ? 'text-blue-600' 
+                  : 'text-gray-600'
+              }`}
+            >
+              <div className={`p-2 rounded-full ${
+                isActive(item.path) ? 'bg-blue-50' : ''
+              }`}>
+                {item.icon}
+              </div>
+              <span className="text-xs mt-1 font-medium">{item.label}</span>
+            </Link>
+          ))}
         </div>
       </div>
 
-      {isMenuOpen && (
-        <div className="md:hidden z-1000">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {user ? (
-              <>
-                <div className="px-3 py-2 text-gray-700">Hello, {user.name}</div>
-                <Link
-                  to="/profile"
-                  className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Profile
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="block w-full text-left px-3 py-2 text-red-600 hover:bg-gray-50 rounded-md"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Register
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-    </nav>
+      {/* Add padding for mobile bottom nav and navbar */}
+      <div className="pt-14 pb-16 md:pt-16"></div>
+    </>
   );
 };
 

@@ -4,32 +4,44 @@ import { HiMiniBars3BottomLeft, HiXMark } from "react-icons/hi2";
 const Slider = () => {
   const [open, setOpen] = useState(false);
 
-  const handleSlide = () => {
-    setOpen(prev => !prev); // toggle open/close
-  };
-
   return (
-    <div className='absolute top-18'>
-      {/* Menu Icon */}
+    <>
+      {/* Hamburger (Mobile Only) */}
       <HiMiniBars3BottomLeft
-        onClick={handleSlide}
-        className="text-3xl cursor-pointer"
+        onClick={() => setOpen(true)}
+        className="text-3xl cursor-pointer md:hidden"
       />
 
-      {/* Slider */}
-      {open && (
-        <div className="fixed top-16 left-0 w-[300px] h-[93%] bg-gray-600 text-white p-4 transition-all">
-          
-          {/* Close Icon */}
-          <HiXMark
-            onClick={handleSlide}
-            className="text-2xl cursor-pointer mb-4"
-          />
+      {/* Overlay (Mobile Only) */}
+      <div
+        onClick={() => setOpen(false)}
+        className={`fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 md:hidden ${
+          open ? 'opacity-100 visible' : 'opacity-0 invisible'
+        }`}
+      />
 
-          <p>Slider Opened</p>
-        </div>
-      )}
-    </div>
+      {/* Sidebar */}
+      <div
+        className={`
+          fixed top-16 left-0 z-50
+          w-[300px] h-[93%]
+          bg-gray-400 text-white p-4
+
+          transform transition-transform duration-300 ease-in-out
+          ${open ? 'translate-x-0' : '-translate-x-full'}
+
+          md:translate-x-0
+        `}
+      >
+        {/* Close icon (Mobile Only) */}
+        <HiXMark
+          onClick={() => setOpen(false)}
+          className="text-2xl cursor-pointer mb-4 md:hidden"
+        />
+
+        <p>Slider Content</p>
+      </div>
+    </>
   );
 };
 

@@ -1,37 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { TaskProvider } from './contexts/TaskContext';
+import { useAuth } from './contexts/AuthContext';
 import Navbar from './components/Layout/Navbar';
 import Home from './pages/Home';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
-import type { User } from './types/auth.types';
-import { authService } from './services/auth.service';
-import Slider from './components/Layout/Slider';
+import './App.css';
+import Dashboard from './pages/Dashboard';
 
+// Main App component with providers
 const App: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  return (
+    <Router>
+      <AuthProvider>
+        <TaskProvider>
+          <AppContent />
+        </TaskProvider>
+      </AuthProvider>
+    </Router>
+  );
+};
 
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
-  const checkAuthStatus = async () => {
-    try {
-      const { user } = await authService.getProfile();
-      setUser(user);
-    } catch (err) {
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-  };
+// AppContent component that uses the context
+const AppContent: React.FC = () => {
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -42,12 +38,28 @@ const App: React.FC = () => {
   }
 
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Navbar user={user} onLogout={handleLogout} />
-        
+    <div className="min-h-screen bg-gray-50">
+      <Navbar user={user} onLogout={() => window.location.reload()} />
+      
+      <main className="pt-16"> {/* Offset for fixed navbar */}
         <Routes>
-          <Route path="/" element={<Home user={user} />} />
+          <Route 
+            path="/" 
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          
           <Route 
             path="/login" 
             element={
@@ -69,8 +81,8 @@ const App: React.FC = () => {
             } 
           />
         </Routes>
-      </div>
-    </Router>
+      </main>
+    </div>
   );
 };
 
