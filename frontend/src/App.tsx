@@ -1,8 +1,8 @@
+// App.tsx - COMPLETE FIXED VERSION
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { TaskProvider } from './contexts/TaskContext';
-import { useAuth } from './contexts/AuthContext';
 import Navbar from './components/Layout/Navbar';
 import Home from './pages/Home';
 import LoginPage from './pages/LoginPage';
@@ -12,7 +12,7 @@ import ProtectedRoute from './components/Auth/ProtectedRoute';
 import './App.css';
 import Dashboard from './pages/Dashboard';
 
-// Main App component with providers
+// Main App component
 const App: React.FC = () => {
   return (
     <Router>
@@ -25,65 +25,78 @@ const App: React.FC = () => {
   );
 };
 
-// AppContent component that uses the context
+// Separate component that uses the Auth hook
 const AppContent: React.FC = () => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
+  // This is fine - AppContent is inside AuthProvider
+  
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar user={user} onLogout={() => window.location.reload()} />
+      {/* Navbar will handle its own user state */}
+      <NavbarWrapper />
       
       <main className="pt-16"> {/* Offset for fixed navbar */}
         <Routes>
-          <Route 
-            path="/" 
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
+          {/* Public Routes */}
+          <Route path="/login" element={<LoginOrRedirect />} />
+          <Route path="/register" element={<RegisterOrRedirect />} />
           
-          <Route 
-            path="/login" 
-            element={
-              user ? <Navigate to="/" replace /> : <LoginPage />
-            } 
-          />
-          <Route 
-            path="/register" 
-            element={
-              user ? <Navigate to="/" replace /> : <RegisterPage />
-            } 
-          />
-          <Route 
-            path="/profile" 
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            } 
-          />
+          {/* Protected Routes */}
+          <Route path="/" element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          } />
+          
+          {/* Fallback redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </div>
   );
 };
+
+// Separate component for Navbar with user logic
+const NavbarWrapper: React.FC = () => {
+  const { user, logout } = useAuth(); // Import this at top
+  
+  return <Navbar user={user} onLogout={logout} />;
+};
+
+// Separate component for Login page logic
+const LoginOrRedirect: React.FC = () => {
+  const { user } = useAuth();
+  
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <LoginPage />;
+};
+
+// Separate component for Register page logic
+const RegisterOrRedirect: React.FC = () => {
+  const { user } = useAuth();
+  
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <RegisterPage />;
+};
+
+// Import hooks - Add this at the top
+import { useAuth } from './contexts/AuthContext';
 
 export default App;
