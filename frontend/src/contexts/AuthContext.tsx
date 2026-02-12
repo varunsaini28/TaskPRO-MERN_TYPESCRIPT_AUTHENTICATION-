@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+=======
+// contexts/AuthContext.tsx - COMPLETE FIXED VERSION
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+>>>>>>> f866ce487164c3fa1e4d5dbf8182daa6a891affd
 import { authService } from '../services/auth.service';
 import type { 
   User, 
@@ -17,13 +22,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // ✅ Initialize axios with token from localStorage
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Set default header for all future requests
+      const axios = require('axios').default;
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+  }, []);
+
   const checkAuth = async (): Promise<void> => {
     try {
       const { user } = await authService.getProfile();
       setUser(user);
-    } catch (err) {
-      console.error('Auth check failed:', err);
+      console.log('✅ Auth check successful, user:', user);
+    } catch (err: any) {
+      console.log('Auth check failed (normal if not logged in):', err.response?.status || err.message);
       setUser(null);
+      
+      // Clear token if 401
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        const axios = require('axios').default;
+        delete axios.defaults.headers.common['Authorization'];
+      }
     } finally {
       setLoading(false);
     }
@@ -35,20 +58,50 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (credentials: LoginFormData): Promise<void> => {
     try {
-      await authService.login(credentials);
-      await checkAuth();
-    } catch (error) {
-      console.error('Login failed:', error);
+      const response = await authService.login(credentials);
+      
+      // ✅ CRITICAL: Save token from response
+      if (response.token) {
+        localStorage.setItem('token', response.token);
+        console.log('Token saved:', response.token.substring(0, 20) + '...');
+        
+        // Set axios header
+        const axios = require('axios').default;
+        axios.defaults.headers.common['Authorization'] = `Bearer ${response.token}`;
+      }
+      
+      // ✅ Save user data
+      if (response.user) {
+        localStorage.setItem('user', JSON.stringify(response.user));
+        setUser(response.user);
+      }
+      
+      console.log('✅ Login successful');
+    } catch (error: any) {
+      console.error('Login failed:', error.response?.data || error.message);
       throw error;
     }
   };
 
   const register = async (credentials: RegisterFormData): Promise<void> => {
     try {
-      await authService.register(credentials);
-      await checkAuth();
-    } catch (error) {
-      console.error('Registration failed:', error);
+      const response = await authService.register(credentials);
+      
+      // ✅ Save token if registration includes auto-login
+      if (response.token) {
+        localStorage.setItem('token', response.token);
+        const axios = require('axios').default;
+        axios.defaults.headers.common['Authorization'] = `Bearer ${response.token}`;
+      }
+      
+      if (response.user) {
+        localStorage.setItem('user', JSON.stringify(response.user));
+        setUser(response.user);
+      }
+      
+      console.log('✅ Registration successful');
+    } catch (error: any) {
+      console.error('Registration failed:', error.response?.data || error.message);
       throw error;
     }
   };
@@ -56,10 +109,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async (): Promise<void> => {
     try {
       await authService.logout();
-      setUser(null);
     } catch (error) {
-      console.error('Logout failed:', error);
-      throw error;
+      console.error('Logout API error:', error);
+    } finally {
+      // ✅ ALWAYS clear local storage
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+      
+      // Clear axios header
+      const axios = require('axios').default;
+      delete axios.defaults.headers.common['Authorization'];
+      
+      console.log('✅ Logout successful');
     }
   };
 

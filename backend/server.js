@@ -13,7 +13,12 @@ const app = express();
 // CORS configuration
 app.use(cors({
    origin: [
+<<<<<<< HEAD
       "http://localhost:5174",
+=======
+      "http://localhost:5175",
+      "https://taskpro-cyan.vercel.app",
+>>>>>>> f866ce487164c3fa1e4d5dbf8182daa6a891affd
       "http://10.239.34.201:5174"
     ],
   credentials: true,

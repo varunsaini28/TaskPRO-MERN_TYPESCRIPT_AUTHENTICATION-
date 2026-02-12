@@ -1,32 +1,13 @@
-import React, { useEffect, useState } from 'react';
+// components/Auth/SimpleProtectedRoute.tsx
 import { Navigate } from 'react-router-dom';
-import { authService } from '../../services/auth.service';
-import type { User } from '../../types/auth.types';
+import { useAuth } from '../../contexts/AuthContext';
 
-interface ProtectedRouteProps {
+interface SimpleProtectedRouteProps {
   children: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { user } = await authService.getProfile();
-        setUser(user);
-        setIsAuthenticated(true);
-      } catch (error) {
-        setIsAuthenticated(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
+const ProtectedRoute: React.FC<SimpleProtectedRouteProps> = ({ children }) => {
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -36,7 +17,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
