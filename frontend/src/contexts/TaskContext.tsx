@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { createContext, useState, useContext, type ReactNode, useEffect } from 'react';
 import type { Task, CreateTaskData, UpdateTaskData } from '../types/task.types';
 import { taskService } from '../services/task.service';
 
@@ -15,6 +16,7 @@ interface TaskContextType {
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTasks = (): TaskContextType => {
   const context = useContext(TaskContext);
   if (!context) {

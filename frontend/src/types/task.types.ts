@@ -84,6 +84,7 @@ export interface Notification {
   points?: number;
   read: boolean;
   createdAt: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: Record<string, any>;
 }
 

@@ -21,9 +21,17 @@ interface TaskCardProps {
   task: Task;
   onTaskUpdate: () => void;
   onEdit: (task: Task) => void;
+  index?: number;
+  totalTasks?: number;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onTaskUpdate, onEdit }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ 
+  task, 
+  onTaskUpdate, 
+  onEdit,
+  index = 0,
+  totalTasks = 0 
+}) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -37,42 +45,21 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onTaskUpdate, onEdit }) => {
       console.error('Failed to update task status:', error);
     }
   };
+const handleDelete = async () => {
+  // Show confirmation dialog
+  if (!window.confirm('Are you sure you want to delete this task?')) {
+    return;
+  }
 
-  const handleDelete = async () => {
-    if (isDeleting) {
-      // Undo delete
-      try {
-        await taskService.restoreTask(task._id);
-        setIsDeleted(false);
-        onTaskUpdate();
-      } catch (error) {
-        console.error('Failed to restore task:', error);
-      }
-      setIsDeleting(false);
-      setShowMenu(false);
-      return;
-    }
-
-    setIsDeleting(true);
-    // Auto undo after 5 minutes
-    const deleteTimer = setTimeout(() => {
-      if (isDeleting) {
-        handleConfirmDelete();
-      }
-    }, 5 * 60 * 1000); // 5 minutes
-    return () => clearTimeout(deleteTimer);
-  };
-
-  const handleConfirmDelete = async () => {
-    try {
-      await taskService.deleteTask(task._id);
-      setIsDeleted(true);
-      onTaskUpdate();
-    } catch (error) {
-      console.error('Failed to delete task:', error);
-    }
-    setIsDeleting(false);
-  };
+  try {
+    await taskService.deleteTask(task._id);
+    onTaskUpdate(); // Refresh the task list
+  } catch (error) {
+    console.error('Failed to delete task:', error);
+    // Optional: Show error message to user
+    alert('Failed to delete task. Please try again.');
+  }
+};
 
   const getPriorityConfig = (priority: Task['priority']) => {
     switch (priority) {
@@ -145,6 +132,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onTaskUpdate, onEdit }) => {
       ${isDeleting ? 'border-red-300 bg-red-50' : 'border-gray-100'}
       ${isDeleted ? 'opacity-50' : ''}
       transform hover:-translate-y-0.5
+      ${index >= 4 ? '' : 'mb-3'} // Add margin only for first 4 tasks
     `}>
       <div className="p-4">
         {/* Header with menu */}

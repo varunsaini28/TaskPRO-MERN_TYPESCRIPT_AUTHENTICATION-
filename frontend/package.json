@@ -25,6 +25,7 @@
     "react-tsparticles": "^2.12.2",
     "react-typewriter-effect": "^1.1.0",
     "recharts": "^3.6.0",
+    "tailwind-scrollbar": "^4.0.2",
     "tailwindcss": "^4.1.17",
     "three": "^0.182.0",
     "three.js": "^0.77.1",

@@ -5,9 +5,12 @@ import logo from '../../assets/logo.png';
 import Box from '../Auth/Box';
 import { MdHome, MdDashboard, MdDateRange } from "react-icons/md";
 import { LuMessageCircleMore } from "react-icons/lu";
+import Iconbell from '../Task/Iconbell';
+import BellBox from '../Task/BellBox';
 
 const Navbar: React.FC = () => {
   const [showBox, setShowBox] = useState(false);
+  const [showBellBox, setShowBellBox] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -73,7 +76,7 @@ const Navbar: React.FC = () => {
             </Link>
 
             {/* Navigation Icons - Desktop */}
-            <div className="flex items-center space-x-8">
+            <div className="flex items-center space-x-14">
               {navItems.map((item) => (
                 <Link
                   key={item.path}
@@ -95,6 +98,15 @@ const Navbar: React.FC = () => {
             </div>
 
             {/* Auth Section - Profile in navbar */}
+          
+      {/* Bell icon */}
+      <div   onClick={() => setShowBellBox(prev => !prev)}>
+        <Iconbell />
+      </div>
+
+      {/* BellBox */}
+      {showBellBox && <BellBox />}
+    
             {user ? (
               <div className="relative" ref={boxRef}>
                 <button
