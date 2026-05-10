@@ -13,7 +13,7 @@ Tailwind CSS
 
 Axios
 
-React Router DOM
+React Router Dom
 
 Context API / Redux (if used)
 
