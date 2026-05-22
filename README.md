@@ -1,4 +1,4 @@
-🚀 TaskPro
+ TaskPro
 
 TaskPro is a full-stack task management application built using the MERN Stack (MongoDB, Express, React, Node.js) with TypeScript and Tailwind CSS.
 
